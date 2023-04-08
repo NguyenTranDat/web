@@ -1,0 +1,14 @@
+.login-form {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd; }
+  .login-form form .text-center img {
+    width: 40px;
+    height: 40px; }
+
+/*# sourceMappingURL=Login.css.map */
