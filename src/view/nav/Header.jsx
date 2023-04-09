@@ -1,5 +1,6 @@
 import React from 'react';
 import './style/Header.css';
+import {Link} from "react-router-dom";
 
 class Header extends React.Component {
 
@@ -15,9 +16,9 @@ class Header extends React.Component {
                     <button id="go" onClick={this.handlSearch}><img src="fig/search.png" alt = "user" /></button> 
                 </div>
                 
-                <button id="user"><a href="/login"><img src="fig/user.png" alt = "user" /></a></button> 
-                <button id="home"><a href="/home"><img src="fig/home.png" alt = "home" /></a></button>
-                <button id="cart"><a href="/cart"><img src="fig/cart.png" alt = "cart" /></a></button>
+                <button id='user'><Link to='/login'><img src="fig/user.png" alt = "user" /></Link></button>
+                <button id="home"><Link to="/"><img src="fig/home.png" alt = "home" /></Link></button>
+                <button id="cart"><Link to="/cart"><img src="fig/cart.png" alt = "cart" /></Link></button>
             </div>
         )
     }

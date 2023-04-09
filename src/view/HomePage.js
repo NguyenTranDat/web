@@ -1,5 +1,3 @@
-
-import {withRouter} from "react-router-dom"
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {Layout} from "antd";
 import {Header, NavBar, Footer} from "./nav";
@@ -16,4 +14,4 @@ function HomePage(pros) {
     );
 } 
 
-export default withRouter(HomePage);
+export default HomePage;

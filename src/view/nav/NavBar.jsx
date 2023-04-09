@@ -1,23 +1,31 @@
 import { Navbar, Nav } from 'react-bootstrap';
-import React, { Component } from 'react';
+import React, { useState } from 'react';
+import { Layout } from 'antd';
+import { Router, Route } from 'react-router-dom';
+import ContentBook from './Content';
 
-class NavBar extends Component {
-  render() {
-    return (
+function NavBar() {
+  return (
+    <Layout>
       <Navbar bg="light" expand="lg">
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
               <Nav className="mr-auto">
-              <Nav.Link href="#home">Toán</Nav.Link>
-              <Nav.Link href="#about">Lý</Nav.Link>
-              <Nav.Link href="#services">Hóa</Nav.Link>
-              <Nav.Link href="#contact">Contact</Nav.Link>
+                  <Nav.Link href="/">Trang chủ</Nav.Link>
+                  <Nav.Link href="#van">Văn</Nav.Link>
+                  <Nav.Link href="#trinh-tham">Trinh thám</Nav.Link>
               </Nav>
           </Navbar.Collapse>
       </Navbar>
-    )
-  }
-  
+      {/* <Router>
+        <Route path="/" element={<ContentBook/>}/>
+        <Route path="#van" element={<ContentBook/>}/>
+        <Route path="#trinh-tham" element={<ContentBook/>}/>
+      </Router> */}
+      <ContentBook></ContentBook>
+    </Layout>
+    
+  )
 }
 
 export default NavBar;

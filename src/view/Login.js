@@ -1,6 +1,6 @@
 import React from 'react';
-import {withRouter, Link} from "react-router-dom"
 import './style/Login.css';
+import {Link} from "react-router-dom";
 
 function Login(prop) {
     return (
@@ -33,7 +33,7 @@ function Login(prop) {
 
                 <div className="row mb-4">
                     <div className="col d-flex justify-content-center">
-                    <a href="/home"><button type="button" className="btn btn-primary btn-block mb-4">Sign in</button></a>
+                    <Link to="/"><button type="button" className="btn btn-primary btn-block mb-4">Sign in</button></Link>
                     </div>
                 </div>
 
@@ -49,4 +49,4 @@ function Login(prop) {
     )
 }
 
-export default withRouter(Login);
+export default Login;
