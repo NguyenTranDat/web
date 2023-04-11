@@ -2,7 +2,7 @@ import { Navbar, Nav } from 'react-bootstrap';
 import React, { useState } from 'react';
 import { Layout } from 'antd';
 import { Router, Route } from 'react-router-dom';
-import ContentBook from './Content';
+import Content from './Content';
 
 function NavBar() {
   return (
@@ -22,7 +22,7 @@ function NavBar() {
         <Route path="#van" element={<ContentBook/>}/>
         <Route path="#trinh-tham" element={<ContentBook/>}/>
       </Router> */}
-      <ContentBook></ContentBook>
+      <Content></Content>
     </Layout>
     
   )
