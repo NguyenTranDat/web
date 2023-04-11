@@ -1,0 +1,13 @@
+# client
+npm i react-router-dom
+npm i antd
+npm i bootstrap
+npm i react-bootstrap
+npm i axios
+#server
+npm init -y
+npm i
+npm i mysql
+npm i mongodb
+npm i cors
+npm i express
