@@ -1,31 +1,31 @@
 import { Navbar, Nav } from 'react-bootstrap';
-import React, { useState } from 'react';
+import React, { createContext, useState } from 'react';
 import { Layout } from 'antd';
-import { Router, Route } from 'react-router-dom';
+import { Route, Routes, Link } from 'react-router-dom';
 
-import {Content} from './index';
+import {ContentHome, ContentTrinhTham, ContentVan} from './index';
+
+export const ContentContext = createContext();
 
 function NavBar() {
+  const [content, setContent] = useState(<ContentHome/>);
+
   return (
     <Layout>
       <Navbar bg="light" expand="lg">
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
               <Nav className="mr-auto">
-                  <Nav.Link href="/">Trang chủ</Nav.Link>
-                  <Nav.Link href="#van">Văn</Nav.Link>
-                  <Nav.Link href="#trinh-tham">Trinh thám</Nav.Link>
+                  <Link to="/" className="nav-link" onClick={() => setContent(<ContentHome/>)}>Trang chủ</Link>
+                  <Link to="/van" className="nav-link" onClick={() => setContent(<ContentVan/>)}>Văn</Link>
+                  <Link to="/trinhtham" className="nav-link" onClick={() => setContent(<ContentTrinhTham/>)}>Trinh thám</Link>
               </Nav>
           </Navbar.Collapse>
       </Navbar>
-      {/* <Router>
-        <Route path="/" element={<ContentBook/>}/>
-        <Route path="#van" element={<ContentBook/>}/>
-        <Route path="#trinh-tham" element={<ContentBook/>}/>
-      </Router> */}
-      <Content></Content>
-    </Layout>
-    
+      <ContentContext.Provider value={{ setContent }}>
+        {content}
+      </ContentContext.Provider>
+    </Layout>  
   )
 }
 

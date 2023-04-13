@@ -1,65 +1,35 @@
-var mysql = require('mysql');
-
-var con = mysql.createConnection({
-  host: "localhost",
-  user: "newuser",
-  password: "password",
-  database: "web"
-});
-
+const mysql = require('mysql');
 const fs = require('fs');
 const readline = require('readline');
 
-const file = readline.createInterface({
-  input: fs.createReadStream('link.txt')
+// Kết nối đến cơ sở dữ liệu MySQL
+const con = mysql.createConnection({
+  host: 'localhost',
+  user: 'newuser',
+  password: 'password',
+  database: 'web',
 });
 
-const values = []
+// Đọc từng dòng trong tệp văn bản và đưa chúng vào cơ sở dữ liệu MySQL
+const file = readline.createInterface({
+  input: fs.createReadStream('link.txt'),
+});
 
-function get(line) {
-  var i = 0;
-  var x = []
-  //title
-  var title = '';
-  for(; i<line.length; ++i) {
-    if(line[i] == '\\') break;
-    else title = title + line[i];
-  }
+const values = [];
 
-  //name
-  var name = '';
-  ++i;
-  for(; i<line.length; ++i) {
-    if(line[i] == '\\') break;
-    else name = name + line[i];
-  }
+file.on('line', (line) => {
+  const [title, author, link] = line.split('\\');
+  values.push([title, author, link]);
+});
 
-  //link
-  var link = '';
-  ++i;
-  for(; i<line.length; ++i) {
-    if(line[i] == '\\') break;
-    else link = link + line[i];
-  }
-
-  x.push(title);
-  x.push(name);
-  x.push(link);
-  return x;
-}
-
-// file.on('line', (line) => {
-//   //console.log(line)
-//   //values.push(get(line));
-// });
-
-
-con.connect(function(err) {
-  if (err) throw err;
-  console.log("Connected!!!");
-  var sql = "INSERT INTO book (title, name, link) VALUES ('hhh', 'abc', 'hcn')";
-  con.query(sql, function (err, result) {
+file.on('close', () => {
+  // Chèn các giá trị vào bảng "book" trong cơ sở dữ liệu
+  const sql = 'INSERT INTO book (title, name, link) VALUES ?';
+  con.query(sql, [values], function (err, result) {
     if (err) throw err;
-    console.log("1 record inserted");
+    console.log(`Inserted ${result.affectedRows} rows`);
   });
+
+  // Đóng kết nối đến cơ sở dữ liệu
+  con.end();
 });

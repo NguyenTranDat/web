@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-resp = requests.get('https://cachep.vn/collections/sach-van-hoc')
+resp = requests.get('https://cachep.vn/collections/trinh-tham-kiem-hiep')
 soup = BeautifulSoup(resp.content, "html.parser")
 
 def getTitle():
@@ -30,7 +30,7 @@ def getDoc():
     for link in links:
         name = link.get('alt')
         content = link.get('src')
-        f.write('{}\{}\https::{}\n'.format(title, name, content))
+        f.write('{}\{}\https:{}\n'.format(title, name, content))
 
 getDoc()
 
