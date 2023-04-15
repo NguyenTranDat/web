@@ -1,51 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Button } from 'react-bootstrap';
+import React, {useEffect, useState }  from 'react';
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import axios  from 'axios';
 
-function Cart() {
-  const [purchasedProducts, setPurchasedProducts] = useState([]);
-  const [books, setBookState] = useState([])
+import { CartItem } from '../.component/index';
 
-  useEffect(()=>{
-    const getTodos = async () =>{
-      try {
-        const res = await axios.get('http://localhost:9000/')
-        //console.log(res.data);
-        setBookState(res.data)
-      } catch (error) {
-        console.log(error);
-      }
+function Cart(props) {
+  const items = [
+    {
+      id: 1,
+      name: 'Áo phông nam trơn',
+      price: 200000,
+      quantity: 1,
+      imageUrl: 'https://cdn.pixabay.com/photo/2017/08/15/15/06/white-t-shirt-2644298_1280.jpg'
+    },
+    {
+      id: 2,
+      name: 'Quần jeans nam',
+      price: 500000,
+      quantity: 2,
+      imageUrl: 'https://cdn.pixabay.com/photo/2015/07/02/10/23/jeans-828693_1280.jpg'
     }
-
-    getTodos();
-  });
-
-  const removeProduct = (id) => {
-    // Xóa sản phẩm đã mua khỏi danh sách
-    const updatedProducts = books.filter(product => product.id !== id);
-    setPurchasedProducts(updatedProducts);
-    localStorage.setItem('books', JSON.stringify(updatedProducts));
-  }
+  ];
 
   return (
-    <div className="container">
-      <h1>Danh sách sản phẩm đã mua</h1>
-      <div className="row">
-        {books.map(product => (
-          <div className="col-md-4" key={product.id}>
-            <Card style={{ width: '18rem', margin: '2px' }}>
-              <Card.Img variant="top" src={product.image} />
-              <Card.Body>
-                <Card.Title>{product.name}</Card.Title>
-                <Card.Subtitle className="mb-2 text-muted">{product.author}</Card.Subtitle>
-                <Card.Text>{product.description}</Card.Text>
-                <Button variant="primary" onClick={() => removeProduct(product.id)}>Xóa</Button>
-              </Card.Body>
-            </Card>
-          </div>
-        ))}
-      </div>
-    </div>
+    <Container>
+      <Row>
+        <Col>
+          <Card>
+          <Card.Header>
+            <h3>Giỏ hàng của bạn</h3>
+          </Card.Header>
+          <Card.Body>
+            {items.map(item => <CartItem key={item.id} item={item} />)}
+          </Card.Body>
+          <Card.Footer>
+            <Button variant="primary">Thanh toán</Button>
+          </Card.Footer>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   );
 }
 
-export default MyPurchasedProducts;
+export default Cart;

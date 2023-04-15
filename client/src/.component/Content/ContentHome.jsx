@@ -13,7 +13,7 @@ function ContentHome(pros) {
       try {
         const res = await axios.get('http://localhost:9000/')
         //console.log(res.data);
-        setBookState(res.data)
+        setBookState(res.data);
       } catch (error) {
         console.log(error);
       }
