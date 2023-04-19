@@ -1,69 +1,35 @@
 const express = require('express');
-const router = express.Router();
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const con = require('./connectDatabase');
+const db = require('./connectDatabase');
 
-const JWT_SECRET = 'secret';
+const router = express.Router();
 
-function verifyToken(req, res, next) {
-  const token = req.headers['authorization'];
-  if (!token) {
-    return res.status(401).send({ auth: false, message: 'No token provided.' });
+router.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const [rows] = await db.query('SELECT * FROM customer WHERE username = ?', [username]);
+
+    if (rows.length === 0) {
+      return res.status(401).send({ message: 'Invalid username or password' });
+    }
+
+    const user = rows[0];
+
+    const same = await bcrypt.compare(password, user.password);
+
+    if (!same) {
+      return res.status(401).send({ message: 'Invalid username or password' });
+    }
+
+    const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, { expiresIn: '1h' });
+
+    res.send({ message: 'Login success', token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: 'Internal server error' });
   }
-
-  jwt.verify(token, JWT_SECRET, function(err, decoded) {
-    if (err) {
-      return res.status(500).send({ auth: false, message: 'Failed to authenticate token.' });
-    }
-
-    req.userId = decoded.id;
-    next();
-  });
-}
-
-router.post('/register', (req, res) => {
-  const { username, password } = req.body;
-
-  con.query(`SELECT * FROM customer WHERE username='${username}'`, (err, result) => {
-    if (err) {
-      throw err;
-    }
-
-    if (result.length > 0) {
-      res.send({ success: false, message: 'Username already exists.' });
-    } else {
-      con.query(`INSERT INTO customer (username, password) VALUES ('${username}', '${password}')`, (err, result) => {
-        if (err) {
-          throw err;
-        }
-
-        res.send({ success: true, message: 'User registered successfully.' });
-      });
-    }
-  });
-});
-
-router.post('/login', (req, res) => {
-  const { username, password } = req.body;
-
-  con.query(`SELECT * FROM customer WHERE username='${username}' AND password='${password}'`, (err, result) => {
-    if (err) {
-      throw err;
-    }
-
-    if (result.length > 0) {
-      const user = { id: result[0].id };
-      const token = jwt.sign(user, JWT_SECRET, { expiresIn: '1h' });
-
-      res.send({ auth: true, token: token });
-    } else {
-      res.send({ auth: false, message: 'Invalid username or password.' });
-    }
-  });
-});
-
-router.get('/protected', verifyToken, (req, res) => {
-  res.send({ message: 'This is a protected route.' });
 });
 
 module.exports = router;
