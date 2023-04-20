@@ -47,6 +47,30 @@ app.get('/search', (req, res) => {
   });
 });
 
+app.get('/cart', (req, res) => {
+  const cart = req.query.term;
+  // Truy vấn cơ sở dữ liệu để tìm kiếm sản phẩm thỏa mãn điều kiện
+  con.query(`SELECT * FROM rental INNER JOIN book ON book.book_id = rental.book_id WHERE customer_id = '${cart}'`, (error, results) => {
+      if (error) {
+          console.error('Error querying MySQL database:', error);
+          return res.status(500).json({ error });
+      }
+      res.json(results);
+  });
+});
+
+app.post('/update/rental', (req, res) => {
+  const { book_id, userID } = req.body;
+
+  const query = `INSERT INTO rental (book_id, customer_id) VALUES ('${book_id}', ${userID})`;
+
+  con.query(query, (err, result) => {
+      if (err) throw err;
+      console.log(`Insert data ${book_id}, ${userID} done`);
+      res.sendStatus(200);
+  });
+});
+
 const username = 'abc@gmail.com';
 const password = 'abc123';
 
@@ -101,8 +125,3 @@ app.get('/api/user', (req, res) => {
 app.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
 });
-
-// app.listen(9000, 'localhost'); // or server.listen(3001, '0.0.0.0'); for all interfaces
-// app.on('listening', function() {
-//     console.log('Express server started on port %s at %s', server.address().port, server.address().address);
-// });
