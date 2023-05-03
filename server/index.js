@@ -3,7 +3,6 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const bcrypt = require('bcrypt');
-const saltRounds = 10;
 
 const app = express();
 const port = 9000;
@@ -35,10 +34,25 @@ app.get('/', function (req, res) {
   });
 });
 
+let username;
+let password;
+
 app.get('/search', (req, res) => {
   const searchTerm = req.query.term;
+  const userID = req.query.term;
   // Truy vấn cơ sở dữ liệu để tìm kiếm sản phẩm thỏa mãn điều kiện
-  con.query(`SELECT * FROM book WHERE name LIKE '%${searchTerm}%' OR title LIKE '%${searchTerm}%'`, (error, results) => {
+  con.query(`SELECT book.* FROM book 
+              WHERE (name LIKE '%${searchTerm}%' OR title LIKE '%${searchTerm}%')
+              and book.book_id not in 
+              (
+                select rental.book_id
+                  from rental
+                  inner join customer on customer.customer_id = rental.customer_id
+                  where email = '${username}'
+                  and password = '${password}'
+                  and rental.rental_date is not null
+                  and rental.return_date is null
+              )`, (error, results) => {
       if (error) {
           console.error('Error querying MySQL database:', error);
           return res.status(500).json({ error });
@@ -50,7 +64,27 @@ app.get('/search', (req, res) => {
 app.get('/cart', (req, res) => {
   const cart = req.query.term;
   // Truy vấn cơ sở dữ liệu để tìm kiếm sản phẩm thỏa mãn điều kiện
-  con.query(`SELECT * FROM rental INNER JOIN book ON book.book_id = rental.book_id WHERE customer_id = '${cart}'`, (error, results) => {
+  con.query(`SELECT COUNT(rental.rental_id) as soluong, book.link, book.name, rental.book_id, rental.customer_id FROM rental 
+              INNER JOIN book ON book.book_id = rental.book_id 
+              WHERE customer_id = '${cart}'
+              and rental.rental_date is not null
+              and rental.return_date is null
+              GROUP BY book.book_id`, (error, results) => {
+      if (error) {
+          console.error('Error querying MySQL database:', error);
+          return res.status(500).json({ error });
+      }
+      res.json(results);
+  });
+});
+
+app.get('/booked', (req, res) => {
+  const cart = req.query.term;
+  // Truy vấn cơ sở dữ liệu để tìm kiếm sản phẩm thỏa mãn điều kiện
+  con.query(`SELECT * FROM rental 
+              INNER JOIN book ON book.book_id = rental.book_id 
+              WHERE customer_id = '${cart}'
+              and rental.return_date is not null`, (error, results) => {
       if (error) {
           console.error('Error querying MySQL database:', error);
           return res.status(500).json({ error });
@@ -71,11 +105,25 @@ app.post('/update/rental', (req, res) => {
   });
 });
 
-const username = 'abc@gmail.com';
-const password = 'abc123';
+app.post('/update/return', (req, res) => {
+  const { book_id, customer_id } = req.body;
+
+  const query = `UPDATE rental 
+                 SET return_date = now() 
+                 WHERE book_id = '${book_id}' 
+                   AND customer_id = '${customer_id}'`;
+
+  con.query(query, (err, result) => {
+      if (err) throw err;
+      console.log(`UPDATE data ${book_id}, ${customer_id} done`);
+      res.sendStatus(200);
+  });
+});
 
 app.post('/api/login', async (req, res) => {
-  const { username: reqUsername, password: reqPassword } = req.body;
+  username = req.body.username;
+  password = req.body.password;
+  //const { username: reqUsername, password: reqPassword } = req.body;
 
   // Kiểm tra tài khoản người dùng
   con.query('SELECT * FROM customer WHERE email = ?', [username], async (error, results) => {
@@ -98,22 +146,31 @@ app.post('/api/login', async (req, res) => {
       return;
     }
 
-    // Tạo token cho người dùng
-    const token = jwt.sign(
-      { userId: user.id, username: user.username },
-      'mysecretkey',
-      { expiresIn: '1h' }
-    );
+    const customer_id = user.customer_id;
 
     // Trả về token cho người dùng
-    res.status(200).json({ token });
+    res.status(200).json({ customer_id });
   });
 });
 
 app.get('/api/user', (req, res) => {
-  const searchTerm = req.query.term;
   // Truy vấn cơ sở dữ liệu để tìm kiếm sản phẩm thỏa mãn điều kiện
   con.query(`SELECT customer_id FROM customer WHERE email = '${username}' AND password = '${password}'`, (error, results) => {
+      if (error) {
+          console.error('Error querying MySQL database:', error);
+          return res.status(500).json({ error });
+      }
+      res.json(results);
+  });
+});
+
+app.get('/api/getUser', (req, res) => {
+  con.query(`SELECT CONCAT(c.first_name, ' ', c.last_name) AS name,c.phone, c.address, c.age,
+              GROUP_CONCAT(l.name SEPARATOR ', ') AS his
+              FROM customer AS c
+              LEFT JOIN lichsu AS l ON c.customer_id = l.customer_id
+              WHERE c.email = '${username}' AND c.password = '${password}'
+              GROUP BY c.customer_id`, (error, results) => {
       if (error) {
           console.error('Error querying MySQL database:', error);
           return res.status(500).json({ error });
