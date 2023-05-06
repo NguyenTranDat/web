@@ -1,11 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Card, Button } from 'react-bootstrap';
+
+import { getSearchResults, getUserID } from "./consequence";
 
 
 function BookCart(props) {
     const {book_id, title, author, name, link } = props.book;
-    const [userID, setUserID] = useState(1);
+    const [userID, setUserID] = useState(null);
+
+    useEffect(() => {
+      async function fetchData() {
+        const res = await getUserID();
+        setUserID(res);
+      }
+  
+      fetchData();
+    }, []);
 
     const handleRental = async () => {
         axios.post('http://localhost:9000/update/rental', {book_id, userID})

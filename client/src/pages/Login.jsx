@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 import "./style/Login.css";
@@ -36,6 +37,7 @@ function Login({userID, setUserID}) {
             <input type="password" className="login-input" value={password} onChange={(event) => setPassword(event.target.value)} />
         </label>
         <button type="submit" className="login-button">Đăng nhập</button>
+        <p>Bạn chưa có tài khoản? <Link to="/register">Đăng ký.</Link></p>
     </form>
   );
 }

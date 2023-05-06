@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Home, Login, Cart } from './index';
 import User from './User';
 import { getSearchResults, getUserID } from "./consequence";
+import Register from './Register';
 
 function App() {
   const [userID, setUserID] = useState('');
@@ -47,6 +48,10 @@ function App() {
                                       searchTerm={searchTerm}
                                       setSearchTerm={setSearchTerm}
                                       />} />
+      <Route
+        path="/register"
+        element={<Register userID={userID} setUserID={setUserID} />}
+      />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

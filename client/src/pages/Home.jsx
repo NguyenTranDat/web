@@ -30,7 +30,7 @@ function Home({userID, setUserID, searchTerm, setSearchTerm, searchResults, setS
     fetchData();
   }, []);
 
-  if(userID == undefined) {
+  if(userID === undefined) {
     return <Login userID={userID} setUserID={setUserID} />;
   }
 
@@ -46,7 +46,7 @@ function Home({userID, setUserID, searchTerm, setSearchTerm, searchResults, setS
       <Layout>
         <Header searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         <NavBar setSearchTerm={setSearchTerm} />
-        <Content slicedResults={slicedResults} />
+        <Content slicedResults={slicedResults} userID={userID} />
         <PaginationComponent />
         <Footer />
       </Layout>

@@ -153,6 +153,20 @@ app.post('/api/login', async (req, res) => {
   });
 });
 
+app.post('/api/register', async (req, res) => {
+  username = req.body.username;
+  password = req.body.password;
+  //const { username: reqUsername, password: reqPassword } = req.body;
+
+  const query = `INSERT INTO customer (email, password) VALUES ('${username}', '${password}')`;
+
+  con.query(query, (err, result) => {
+      if (err) throw err;
+      console.log(`Insert data ${username}, ${password} done`);
+      res.sendStatus(200);
+  });
+});
+
 app.get('/api/user', (req, res) => {
   // Truy vấn cơ sở dữ liệu để tìm kiếm sản phẩm thỏa mãn điều kiện
   con.query(`SELECT customer_id FROM customer WHERE email = '${username}' AND password = '${password}'`, (error, results) => {
