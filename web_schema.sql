@@ -48,8 +48,10 @@ CREATE TABLE `customer` (
   `age` int DEFAULT NULL,
   `first_name` varchar(100) DEFAULT NULL,
   `last_name` varchar(100) DEFAULT NULL,
+  `phone` varchar(100) DEFAULT '0912345678',
+  `address` varchar(100) DEFAULT 'HN',
   PRIMARY KEY (`customer_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -69,6 +71,22 @@ CREATE TABLE `employee` (
   PRIMARY KEY (`employee_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Temporary view structure for view `lichsu`
+--
+
+DROP TABLE IF EXISTS `lichsu`;
+/*!50001 DROP VIEW IF EXISTS `lichsu`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `lichsu` AS SELECT 
+ 1 AS `customer_id`,
+ 1 AS `rental_date`,
+ 1 AS `book_id`,
+ 1 AS `name`,
+ 1 AS `return_status`*/;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `payment`
@@ -109,8 +127,26 @@ CREATE TABLE `rental` (
   PRIMARY KEY (`rental_id`),
   KEY `fk_rental_customer` (`customer_id`),
   CONSTRAINT `fk_rental_customer` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`customer_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Final view structure for view `lichsu`
+--
+
+/*!50001 DROP VIEW IF EXISTS `lichsu`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`newuser`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `lichsu` AS select `r`.`customer_id` AS `customer_id`,`r`.`rental_date` AS `rental_date`,`r`.`book_id` AS `book_id`,`b`.`name` AS `name`,if((`r`.`return_date` is null),'chưa trả','đã trả') AS `return_status` from (`rental` `r` join `book` `b` on((`r`.`book_id` = `b`.`book_id`))) */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -121,4 +157,4 @@ CREATE TABLE `rental` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-04-21  6:27:46
+-- Dump completed on 2023-05-07 14:02:46

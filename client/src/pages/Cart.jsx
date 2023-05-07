@@ -2,11 +2,21 @@ import React, {useEffect, useState }  from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import axios  from 'axios';
 import { Layout } from 'antd';
+import { Document, Page } from 'react-pdf';
 
 import { NavBar } from './consequence';
+import urlPDF from "./testpdf.pdf";
 
 function CartItem(props) {
     const { book_id, name, link, soluong, customer_id } = props.item;
+    const [showView, setShowView] = useState(false);
+
+
+    if (showView) {
+      return (
+        <iframe src={urlPDF} width="100%" height="500px" />
+      );
+    }
 
     const handleReturn = async () => {
       axios.post('http://localhost:9000/update/return', {book_id, customer_id})
@@ -22,9 +32,8 @@ function CartItem(props) {
           </div>
           <div style={{ flex: '2', marginRight: '1rem' }}>
             <h5>{name}</h5>
-            {/* <p style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{price.toLocaleString()}đ</p> */}
             <div style={{ display: 'flex', alignItems: 'center', margin: 2 }}>
-              <Button variant="outline-danger" size="sm" style={{ display: 'flex', alignItems: 'center', margin: 2 }}>Xem</Button>
+              <Button variant="outline-danger" size="sm" style={{ display: 'flex', alignItems: 'center', margin: 2 }} onClick={() => setShowView(true)}>Xem</Button>
               <Button variant="outline-danger" size="sm" style={{ display: 'flex', alignItems: 'center', margin: 2 }} onClick={handleReturn}>Trả lại</Button>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', margin: 2 }}>
@@ -66,9 +75,6 @@ function Cart({ userID, searchTerm, setSearchTerm }) {
             <Card.Body>
               {items.map(item => <CartItem key={item.id} item={item} userID={userID}/>)}
             </Card.Body>
-            <Card.Footer>
-              <Button variant="primary">Trả lại hết</Button>
-            </Card.Footer>
             </Card>
           </Col>
         </Row>

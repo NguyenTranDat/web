@@ -157,8 +157,12 @@ app.post('/api/register', async (req, res) => {
   username = req.body.username;
   password = req.body.password;
   //const { username: reqUsername, password: reqPassword } = req.body;
+  const firstName=req.body.firstName;
+  const lastName=req.body.firstName;
+  const phone=req.body.firstName;
+  const address=req.body.firstName;
 
-  const query = `INSERT INTO customer (email, password) VALUES ('${username}', '${password}')`;
+  const query = `INSERT INTO customer (email, password, first_name, last_name, phone, address) VALUES ('${username}', '${password}', '${firstName}', '${lastName}', '${phone}', '${address}')`;
 
   con.query(query, (err, result) => {
       if (err) throw err;
