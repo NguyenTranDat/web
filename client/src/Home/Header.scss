@@ -1,0 +1,112 @@
+$imgWidth: 50px;
+$imgHeight: 50px;
+
+$mobile-width: 480px;
+$tablet-width: 768px;
+$desktop-width: 1024px;
+
+$background: yellow;
+
+@mixin mobile { @media (max-width: #{$mobile-width - 1}) {
+    @content;
+}}
+
+@mixin tablet { @media (min-width: #{$tablet-width}) and (max-width: #{$desktop-width - 1}) {
+    @content;
+}}
+
+@mixin desktop { @media (min-width: #{$desktop-width - 1}) {
+    @content;
+}}
+
+.container-fluid {
+    background-color: $background;
+    .navbar-brand {
+        #img-logo {
+            width: $imgWidth;
+            height: $imgHeight;
+        }
+    }
+
+    #search {
+        display: inline-block;
+        background-color: #fff;
+        border-radius: 0.375rem 0rem 0rem 0.375rem;
+        input {
+            padding: 0.375rem 0.75rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #212529;
+            background-clip: padding-box;
+            border: 0;
+            appearance: none;
+            transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+            @include mobile {
+                width: $mobile-width/2;
+            }
+            @include tablet {
+                width: $tablet-width/2;
+            }
+            @include desktop {
+                width: $desktop-width/2;
+            }
+        }
+        
+        #go {
+            border-radius: 0.375rem;
+            border: 0;
+            margin: 0;
+            background-color: #fff;
+            img {
+                width: $imgWidth/2;
+                height: $imgHeight/2;
+            }
+            
+        }
+
+        @include mobile {
+            margin-left: $imgWidth + 2px;
+        }
+        @include tablet {
+            margin-left: $imgWidth + 5px;
+        }
+        @include desktop {
+            margin-left: $imgWidth + 10px;
+        }
+    }  
+}
+
+#home, #user, #cart {
+    float: right;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    background-color: $background;
+    img {
+        padding: 2px;
+        margin: 2px;
+        width: $imgWidth/3*2;
+        height: $imgHeight/3*2;
+    }
+}
+
+.navbar {
+    background-color: #f8f9fa;
+  }
+  
+  .navbar-nav .nav-item .nav-link {
+    color: #333;
+    font-size: 16px;
+    font-weight: 500;
+    margin-right: 20px;
+  }
+  
+  .navbar-nav .nav-item .nav-link:hover {
+    color: #007bff;
+  }
+
+  .navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

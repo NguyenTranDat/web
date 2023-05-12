@@ -1,202 +1,169 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
-
-const bcrypt = require('bcrypt');
+const bodyParser = require('body-parser');
 
 const app = express();
 const port = 9000;
 
-const mysql = require('mysql');
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-var con = mysql.createConnection({
-    host: "localhost",
-    user: "newuser",
-    password: "password",
-    database: "web"
+const mysql = require('mysql');
+const connectionMySQL = mysql.createConnection({
+    host: 'localhost',
+    user: 'newuser',
+    password: 'password',
+    database: 'website',
 });
 
-con.connect((err) => {
+connectionMySQL.connect((err) => {
     if (err) {
-      throw err;
+        console.error('Error connecting to database MySQL: ', err);
+        return;
     }
-    console.log('Connected to database');
+    console.log('Connected to database MySQL!');
 });
 
-app.get('/', function (req, res) {
-  var sql = "SELECT title, name, link FROM book";
-  con.query(sql, function(err, results) {
-    if (err) throw err;
-    res.send(results);
-  });
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost:27017/web', { useNewUrlParser: true, useUnifiedTopology: true });
+const connectionMongoDB = mongoose.connection;
+connectionMongoDB.on('error', console.error.bind(console, 'connection error:'));
+connectionMongoDB.once('open', function () {
+    console.log("Connected to MongoDB");
 });
 
-let username;
-let password;
-
-app.get('/search', (req, res) => {
-  const searchTerm = req.query.term;
-  const userID = req.query.term;
-  // Truy vấn cơ sở dữ liệu để tìm kiếm sản phẩm thỏa mãn điều kiện
-  con.query(`SELECT book.* FROM book 
-              WHERE (name LIKE '%${searchTerm}%' OR title LIKE '%${searchTerm}%')
-              and book.book_id not in 
-              (
-                select rental.book_id
-                  from rental
-                  inner join customer on customer.customer_id = rental.customer_id
-                  where email = '${username}'
-                  and password = '${password}'
-                  and rental.rental_date is not null
-                  and rental.return_date is null
-              )`, (error, results) => {
-      if (error) {
-          console.error('Error querying MySQL database:', error);
-          return res.status(500).json({ error });
-      }
-      res.json(results);
-  });
+const bookSchema = new mongoose.Schema({
+    _id: mongoose.Schema.Types.ObjectId,
+    type: String,
+    name: String,
+    content: String,
 });
 
-app.get('/cart', (req, res) => {
-  const cart = req.query.term;
-  // Truy vấn cơ sở dữ liệu để tìm kiếm sản phẩm thỏa mãn điều kiện
-  con.query(`SELECT COUNT(rental.rental_id) as soluong, book.link, book.name, rental.book_id, rental.customer_id FROM rental 
-              INNER JOIN book ON book.book_id = rental.book_id 
-              WHERE customer_id = '${cart}'
-              and rental.rental_date is not null
-              and rental.return_date is null
-              GROUP BY book.book_id`, (error, results) => {
-      if (error) {
-          console.error('Error querying MySQL database:', error);
-          return res.status(500).json({ error });
-      }
-      res.json(results);
-  });
+const Book = mongoose.model('Book', bookSchema, 'book');
+
+
+const cassandra = require('cassandra-driver');
+const connectionCassandra = new cassandra.Client({
+    contactPoints: ['localhost'],
+    localDataCenter: 'datacenter1',
+    keyspace: 'web'
 });
 
-app.get('/booked', (req, res) => {
-  const cart = req.query.term;
-  // Truy vấn cơ sở dữ liệu để tìm kiếm sản phẩm thỏa mãn điều kiện
-  con.query(`SELECT * FROM rental 
-              INNER JOIN book ON book.book_id = rental.book_id 
-              WHERE customer_id = '${cart}'
-              and rental.return_date is not null`, (error, results) => {
-      if (error) {
-          console.error('Error querying MySQL database:', error);
-          return res.status(500).json({ error });
-      }
-      res.json(results);
-  });
+connectionCassandra.connect().then(() => {
+    console.log('Connected to Cassandra');
+}).catch((err) => {
+    console.error('Failed to connect to Cassandra', err);
 });
 
-app.post('/update/rental', (req, res) => {
-  const { book_id, userID } = req.body;
-
-  const query = `INSERT INTO rental (book_id, customer_id) VALUES ('${book_id}', ${userID})`;
-
-  con.query(query, (err, result) => {
-      if (err) throw err;
-      console.log(`Insert data ${book_id}, ${userID} done`);
-      res.sendStatus(200);
-  });
+app.post('/rental', async (req, res) => {
+    const { userID } = req.body;
+    let books = [];
+    const query = `SELECT * FROM rental WHERE customer_id = ${userID} AND return_date= null ALLOW FILTERING`;
+    connectionCassandra.execute(query)
+        .then(async (result) => {
+            for (let i = 0; i < result.rows.length; ++i) {
+                const book = await Book.findById(new mongoose.Types.ObjectId(result.rows[i].book_id));
+                if (book) {
+                    books.push(book);
+                } else {
+                    console.log("not found");
+                }
+            }
+            res.status(200).json({ books });
+        })
+        .catch((err) => {
+            console.error('Failed to execute query', err);
+            res.status(500).json({ message: 'Failed to execute query' });
+        });
 });
 
-app.post('/update/return', (req, res) => {
-  const { book_id, customer_id } = req.body;
+app.post('/update/rental', async (req, res) => {
+    const { _id, userID } = req.body;
+    const query = `INSERT INTO rental(rental_id, book_id, customer_id, rental_date) VALUES (uuid(), ?, ?, toTimestamp(now()))`;
+    connectionCassandra.execute(query, [_id.toString(), userID], { prepare: true }, function (err) {
+        if (err) throw err;
+        console.log(`Inserted book with ID ${_id} for ${userID} into Cassandra`);
+    })
+});
 
-  const query = `UPDATE rental 
-                 SET return_date = now() 
-                 WHERE book_id = '${book_id}' 
-                   AND customer_id = '${customer_id}'`;
+app.post('/update/return', async (req, res) => {
+  const { _id, userID } = req.body;
 
-  con.query(query, (err, result) => {
-      if (err) throw err;
-      console.log(`UPDATE data ${book_id}, ${customer_id} done`);
-      res.sendStatus(200);
-  });
+  const query = `SELECT rental_id FROM rental WHERE book_id = ? AND customer_id = ? ALLOW FILTERING`;
+  try {
+    const result = await connectionCassandra.execute(query, [_id, userID], { prepare: true });
+
+    const updateQueries = result.rows.map(row => {
+      console.log(row.rental_id.buffer);
+      const updateQuery = `UPDATE rental SET return_date = toTimestamp(now()) WHERE rental_id = ?`;
+      return { query: updateQuery, params: [row.rental_id.buffer] };
+    });
+    await Promise.all(updateQueries.map(q => connectionCassandra.execute(q.query, q.params, { prepare: true })));
+    console.log(`Updated rentals for book ID ${_id} to return`);
+    res.status(200).json({ message: 'Rental(s) updated successfully' });
+  } catch (err) {
+    console.error('Failed to execute query', err);
+    res.status(500).json({ message: 'Failed to execute query' });
+  }
+});
+
+app.post('/book', async function (req, res) {
+    const { search } = req.body;
+    try {
+        const regex = new RegExp(search, 'i');
+        const results = await Book.find({
+            $or: [
+                { name: { $regex: regex } },
+                { type: { $regex: regex } }
+            ]
+        });
+        res.send(results);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
 app.post('/api/login', async (req, res) => {
-  username = req.body.username;
-  password = req.body.password;
-  //const { username: reqUsername, password: reqPassword } = req.body;
-
-  // Kiểm tra tài khoản người dùng
-  con.query('SELECT * FROM customer WHERE email = ?', [username], async (error, results) => {
-    if (error) {
-      res.status(500).json({ message: 'Lỗi khi truy vấn cơ sở dữ liệu' });
-      return;
-    }
-
-    if (results.length === 0) {
-      res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng' });
-      return;
-    }
-
-    const user = results[0];
-
-    // Kiểm tra mật khẩu người dùng
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (password != user.password) {
-      res.status(401).json({ message: user.password });
-      return;
-    }
-
-    const customer_id = user.customer_id;
-
-    // Trả về token cho người dùng
-    res.status(200).json({ customer_id });
-  });
+    const { username, password } = req.body;
+    connectionMySQL.query('SELECT * FROM customer WHERE email = ?', [username], async (error, results) => {
+        if (error) {
+            res.status(500).json({ message: 'Lỗi khi truy vấn cơ sở dữ liệu' });
+            return;
+        }
+        if (results.length === 0) {
+            res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng' });
+            return;
+        }
+        const user = results[0];
+        if (password != user.password) {
+            res.status(401).json({ message: user.password });
+            return;
+        }
+        const customer_id = user.customer_id;
+        res.status(200).json({ customer_id });
+    });
 });
 
-app.post('/api/register', async (req, res) => {
-  username = req.body.username;
-  password = req.body.password;
-  //const { username: reqUsername, password: reqPassword } = req.body;
-  const firstName=req.body.firstName;
-  const lastName=req.body.firstName;
-  const phone=req.body.firstName;
-  const address=req.body.firstName;
-
-  const query = `INSERT INTO customer (email, password, first_name, last_name, phone, address) VALUES ('${username}', '${password}', '${firstName}', '${lastName}', '${phone}', '${address}')`;
-
-  con.query(query, (err, result) => {
-      if (err) throw err;
-      console.log(`Insert data ${username}, ${password} done`);
-      res.sendStatus(200);
-  });
+app.post('/user/info', async (req, res) => {
+    const { userID } = req.body;
+    connectionMySQL.query(`SELECT concat(first_name, last_name) as name, phone, email, age, address, ad 
+                      FROM customer where customer_id = ${userID}`, (error, results) => {
+        if (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Lỗi khi truy vấn cơ sở dữ liệu' });
+            return;
+        }
+        if (results.length === 0) {
+            res.status(404).json({ message: 'Không tìm thấy thông tin người dùng' });
+            return;
+        }
+        const userInfo = results[0];
+        res.status(200).json({ userInfo });
+    });
 });
 
-app.get('/api/user', (req, res) => {
-  // Truy vấn cơ sở dữ liệu để tìm kiếm sản phẩm thỏa mãn điều kiện
-  con.query(`SELECT customer_id FROM customer WHERE email = '${username}' AND password = '${password}'`, (error, results) => {
-      if (error) {
-          console.error('Error querying MySQL database:', error);
-          return res.status(500).json({ error });
-      }
-      res.json(results);
-  });
-});
-
-app.get('/api/getUser', (req, res) => {
-  con.query(`SELECT CONCAT(c.first_name, ' ', c.last_name) AS name,c.phone, c.address, c.age,
-              GROUP_CONCAT(l.name SEPARATOR ', ') AS his
-              FROM customer AS c
-              LEFT JOIN lichsu AS l ON c.customer_id = l.customer_id
-              WHERE c.email = '${username}' AND c.password = '${password}'
-              GROUP BY c.customer_id`, (error, results) => {
-      if (error) {
-          console.error('Error querying MySQL database:', error);
-          return res.status(500).json({ error });
-      }
-      res.json(results);
-  });
-});
-
-app.listen(port, () => {
-    console.log(`Server is listening on port ${port}`);
+app.listen(port, function () {
+    console.log(`Server running on port ${port}`);
 });
