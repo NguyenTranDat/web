@@ -1,52 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-import axios from 'axios';
 import { Layout } from 'antd';
+import { Link } from "react-router-dom";
 
 import { getBookRental } from '../API/getBookRental';
+import { createGiveBook } from '../API/createGiveBook';
 
-function CartItem(props) {
-  const { _id, name, content, type } = props.item;
+import Logo from "../img/logo192.png";
+import user from "../img/user.png";
+import home from "../img/home.png";
+import cart from "../img/cart.png";
 
-  const handleRental = async () => {
-    axios.post('http://localhost:9000/update/return', { _id, userID:localStorage.getItem("userID")})
-        .then(() => console.log("Data update done!"))
-        .catch((err) => console.log(err));
-}
-
-const handleBorrow = () => {
-    const confirmation = window.confirm(`Bạn muốn trả sách ${name}?`);
-
-    if (confirmation) {
-        console.log('Người dùng đã xác nhận.');
-        handleRental();
-    } else {
-        console.log('Người dùng đã huỷ bỏ.');
-    }
-};
-
-  return (
-    <Card style={{ marginBottom: '1rem' }}>
-      <Card.Body style={{ display: 'flex', alignItems: 'center' }}>
-        <div style={{ flex: '1', marginRight: '1rem' }}>
-          <img src={content} alt={name} style={{ maxWidth: '100%', height: 'auto' }} />
-        </div>
-        <div style={{ flex: '2', marginRight: '1rem' }}>
-          <h5>{name}</h5>
-          <div style={{ display: 'flex', alignItems: 'center', margin: 2 }}>
-            <Button variant="outline-danger" size="sm" style={{ display: 'flex', alignItems: 'center', margin: 2 }} >Xem</Button>
-            <Button variant="outline-danger" size="sm" style={{ display: 'flex', alignItems: 'center', margin: 2 }}  onClick={handleBorrow}>Trả lại</Button>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', margin: 2 }}>
-          </div>
-        </div>
-      </Card.Body>
-    </Card>
-  );
-}
+import urlPDF from "./testpdf.pdf";
 
 function Cart(props) {
   const [items, setItems] = useState([]);
+  const [showView, setShowView] = useState(false);
 
   useEffect(() => {
     const getTodos = async () => {
@@ -60,9 +29,80 @@ function Cart(props) {
     getTodos();
   }, []);
 
+  
+
+  const Header = () => {
+    return (
+      <div className="container-fluid navbar-container" >
+        <a className="navbar-brand" href="/">
+          <img src={Logo} alt="logo" id="img-logo" />
+        </a>
+
+        <h1 style={{ color: 'white', margin: '0 20px' }}>Quản lý thư viện</h1>
+
+        <div style={{ marginLeft: 'auto' }}>
+          <button id='user'><Link to='/user'><img src={user} alt="user" /></Link></button>
+          <button id="home"><Link to="/"><img src={home} alt="home" /></Link></button>
+          <button id="cart"><Link to="/cart"><img src={cart} alt="cart" /></Link></button>
+        </div>
+      </div>
+    );
+  }
+
+  if (showView) {
+    return (
+      <>
+        
+        <Container>
+        <Header />
+        <iframe src={urlPDF} width="100%" height="900px" />
+        </Container>
+        
+      </>
+      
+    );
+  }
+
+  const CartItem = (props) => {
+    const { _id, name, content } = props.item;
+      const handleRental = async () => {
+          await createGiveBook(_id, localStorage.getItem("userID"));
+      }
+
+      const handleBorrow = () => {
+          const confirmation = window.confirm(`Bạn muốn trả sách ${name}?`);
+
+          if (confirmation) {
+              console.log('Người dùng đã xác nhận.');
+              handleRental();
+          } else {
+              console.log('Người dùng đã huỷ bỏ.');
+          }
+      };
+
+      return (
+          <Card style={{ marginBottom: '1rem' }}>
+              <Card.Body style={{ display: 'flex', alignItems: 'center' }}>
+                  <div style={{ flex: '1', marginRight: '1rem' }}>
+                      <img src={content} alt={name} style={{ maxWidth: '100%', height: 'auto' }} />
+                  </div>
+                  <div style={{ flex: '2', marginRight: '1rem' }}>
+                      <h5>{name}</h5>
+                      <div style={{ display: 'flex', alignItems: 'center', margin: 2 }}>
+                          <Button variant="outline-danger" size="sm" style={{ display: 'flex', alignItems: 'center', margin: 2 }} onClick={() => setShowView(true)}>Xem</Button>
+                          <Button variant="outline-danger" size="sm" style={{ display: 'flex', alignItems: 'center', margin: 2 }} onClick={handleBorrow}>Trả lại</Button>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', margin: 2 }}></div>
+                  </div>
+              </Card.Body>
+          </Card>
+      );
+  }
+
   return (
     <Layout>
       <Container>
+      <Header />
         <Row>
           <Col>
             <Card>
@@ -77,7 +117,6 @@ function Cart(props) {
         </Row>
       </Container>
     </Layout>
-
   );
 }
 

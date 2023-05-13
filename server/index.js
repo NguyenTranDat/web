@@ -59,7 +59,29 @@ connectionCassandra.connect().then(() => {
 app.post('/rental', async (req, res) => {
     const { userID } = req.body;
     let books = [];
-    const query = `SELECT * FROM rental WHERE customer_id = ${userID} AND return_date= null ALLOW FILTERING`;
+    const query = `SELECT * FROM muon WHERE customer_id = ${userID} ALLOW FILTERING`;
+    connectionCassandra.execute(query)
+        .then(async (result) => {
+            for (let i = 0; i < result.rows.length; ++i) {
+                const book = await Book.findById(new mongoose.Types.ObjectId(result.rows[i].book_id));
+                if (book) {
+                    books.push(book);
+                } else {
+                    console.log("not found");
+                }
+            }
+            res.status(200).json({ books });
+        })
+        .catch((err) => {
+            console.error('Failed to execute query', err);
+            res.status(500).json({ message: 'Failed to execute query' });
+        });
+});
+
+app.post('/book/borrow', async (req, res) => {
+    const { userID } = req.body;
+    let books = [];
+    const query = `SELECT * FROM tra WHERE customer_id = ${userID} ALLOW FILTERING`;
     connectionCassandra.execute(query)
         .then(async (result) => {
             for (let i = 0; i < result.rows.length; ++i) {
@@ -80,7 +102,7 @@ app.post('/rental', async (req, res) => {
 
 app.post('/update/rental', async (req, res) => {
     const { _id, userID } = req.body;
-    const query = `INSERT INTO rental(rental_id, book_id, customer_id, rental_date) VALUES (uuid(), ?, ?, toTimestamp(now()))`;
+    const query = `INSERT INTO muon(muon_id, book_id, customer_id, rental_date) VALUES (uuid(), ?, ?, toTimestamp(now()))`;
     connectionCassandra.execute(query, [_id.toString(), userID], { prepare: true }, function (err) {
         if (err) throw err;
         console.log(`Inserted book with ID ${_id} for ${userID} into Cassandra`);
@@ -88,24 +110,30 @@ app.post('/update/rental', async (req, res) => {
 });
 
 app.post('/update/return', async (req, res) => {
-  const { _id, userID } = req.body;
+    const { _id, userID } = req.body;
 
-  const query = `SELECT rental_id FROM rental WHERE book_id = ? AND customer_id = ? ALLOW FILTERING`;
-  try {
-    const result = await connectionCassandra.execute(query, [_id, userID], { prepare: true });
+    const query = `SELECT muon_id FROM muon WHERE book_id = ? AND customer_id = ? ALLOW FILTERING`;
 
-    const updateQueries = result.rows.map(row => {
-      console.log(row.rental_id.buffer);
-      const updateQuery = `UPDATE rental SET return_date = toTimestamp(now()) WHERE rental_id = ?`;
-      return { query: updateQuery, params: [row.rental_id.buffer] };
-    });
-    await Promise.all(updateQueries.map(q => connectionCassandra.execute(q.query, q.params, { prepare: true })));
-    console.log(`Updated rentals for book ID ${_id} to return`);
-    res.status(200).json({ message: 'Rental(s) updated successfully' });
-  } catch (err) {
-    console.error('Failed to execute query', err);
-    res.status(500).json({ message: 'Failed to execute query' });
-  }
+    try {
+        const result = await connectionCassandra.execute(query, [_id, userID], { prepare: true });
+
+        const updateQueries = result.rows.map(row => {
+            const deleteQuery = `DELETE FROM muon WHERE muon_id = ?`;
+            const insertQuery = `INSERT INTO tra(tra_id, book_id, customer_id, return_date) VALUES (uuid(), ?, ?, toTimestamp(now()))`;
+
+            return [
+                { query: deleteQuery, params: [row.muon_id.buffer] },
+                { query: insertQuery, params: [_id.toString(), userID] }
+            ];
+        }).flat();
+
+        await Promise.all(updateQueries.map(q => connectionCassandra.execute(q.query, q.params, { prepare: true })));
+
+        res.status(200).json({ message: 'Success' });
+    } catch (err) {
+        console.error('Failed to execute queries', err);
+        res.status(500).json({ message: 'Failed to execute queries' });
+    }
 });
 
 app.post('/book', async function (req, res) {
@@ -141,8 +169,30 @@ app.post('/api/login', async (req, res) => {
             res.status(401).json({ message: user.password });
             return;
         }
-        const customer_id = user.customer_id;
-        res.status(200).json({ customer_id });
+        
+        res.status(200).json({ customer_id: user.customer_id, ad:user.ad });
+    });
+});
+
+app.post('/api/register', async (req, res) => {
+    const { username, password, firstName, lastName, address, phone } = req.body;
+    const query = `INSERT INTO customer (email, password, first_name, last_name, phone, address) VALUES ('${username}', '${password}', '${firstName}', '${lastName}', '${phone}', '${address}')`;
+
+    connectionMySQL.query(query, (err, result) => {
+        if (err) throw err;
+        console.log(`Insert data ${username}, ${password} done`);
+        res.sendStatus(200);
+    });
+});
+
+app.post('/update/password', async (req, res) => {
+    const { password, newPassword, userID } = req.body;
+    const query = `UPDATE customer SET password = ${newPassword} WHERE customer_id = ${userID} AND password='${password}'`;
+
+    connectionMySQL.query(query, (err, result) => {
+        if (err) throw err;
+        console.log(`Insert data ${username}, ${password} done`);
+        res.sendStatus(200);
     });
 });
 

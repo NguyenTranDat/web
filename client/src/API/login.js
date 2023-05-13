@@ -6,7 +6,11 @@ export const login = async (username, password) => {
       username, 
       password 
     });
-    
+    if(response.data.ad == 0) {
+      localStorage.setItem("isAdmin", false);
+    } else {
+      localStorage.setItem("isAdmin", true);
+    };
     return { userId: response.data.customer_id, admin: response.data.ad };
   } catch (error) {
     console.log(error);
