@@ -10,15 +10,15 @@ import Addproduct from './Home/AddProduct';
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/user" element={<UserInfo />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/add" element={<Addproduct />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/cart" element={<Cart />} />
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
+      <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/user" element={<UserInfo />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/add" element={<Addproduct />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
   );
 }
 

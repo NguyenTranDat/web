@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import validator from 'validator';
+
 import { createUser } from '../API/createUser';
 
 function Register() {
@@ -12,13 +14,27 @@ function Register() {
     const [phone, setPhone] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [switchLogin, setSwitchLogin] = useState(false);
+    const [error, setError] = useState("");
     
     const handleSubmit = async (event) => {
         event.preventDefault();
-        if (password !== confirmPassword) return;
+        if(username == "" || password == "") {
+            setError("Bạn cần nhập email hoặc mật khẩu để đăng ký.");
+            return;
+        }
+        if(validator.isEmail(username) == false) {
+            setError("Email không hợp lệ.");
+            return;
+        }
+        if (password !== confirmPassword) {
+            setError("Mật khẩu xác nhận không đúng.");
+            return;
+        }
         try {
-            await createUser(username, password, firstName, lastName, address, phone)
-            setSwitchLogin(true);
+            let res = await createUser(username, password, firstName, lastName, address, phone);
+            if(res) {
+                setSwitchLogin(true);
+            }
         } catch (error) {
             console.log(error);
         }
@@ -68,7 +84,7 @@ function Register() {
                             <Form.Label>Xác nhận mật khẩu</Form.Label>
                             <Form.Control type="password" placeholder="Nhập lại mật khẩu" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                         </Form.Group>
-
+                        {error && <p className="error" style={{color: 'red'}}>{error}</p>}
                         <Button variant="primary" type="submit" style={{ margin: 5 }}>
                             Đăng ký
                         </Button>

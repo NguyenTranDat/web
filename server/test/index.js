@@ -40,9 +40,8 @@ const bookSchema = new mongoose.Schema({
     content: String,
 });
 
-bookSchema.index({ name: 'text', type: 'text' });
-
 const Book = mongoose.model('Book', bookSchema, 'book');
+
 
 const cassandra = require('cassandra-driver');
 const connectionCassandra = new cassandra.Client({
@@ -147,24 +146,10 @@ app.post('/book', async function (req, res) {
                 { type: { $regex: regex } }
             ]
         });
-        if(results.length <= 0) {
-            try {
-                const books = await Book.find({
-                    $or: [
-                        { name: { $regex: `.*${search.split('').join('.*')}.*`, $options: 'i' } },
-                        { type: { $regex: `.*${search.split('').join('.*')}.*`, $options: 'i' } }
-                    ]
-                });
-                return res.send(books);
-            } catch (err) {
-                console.error(err);
-                return res.status(500).send('Internal Server Error');
-            }
-        }
-        return res.send(results);
+        res.send(results);
     } catch (err) {
         console.error(err);
-        return res.status(500).send('Internal Server Error');
+        res.status(500).send('Internal Server Error');
     }
 });
 
@@ -191,37 +176,23 @@ app.post('/api/login', async (req, res) => {
 
 app.post('/api/register', async (req, res) => {
     const { username, password, firstName, lastName, address, phone } = req.body;
-    let query = `SELECT * FROM customer WHERE email = '${username}'`;
+    const query = `INSERT INTO customer (email, password, first_name, last_name, phone, address) VALUES ('${username}', '${password}', '${firstName}', '${lastName}', '${phone}', '${address}')`;
+
     connectionMySQL.query(query, (err, result) => {
         if (err) throw err;
-        if(result.length > 0) {
-            res.status(400).send('Email đã tồn tại.');
-        } else {
-            query = `INSERT INTO customer (email, password, first_name, last_name, phone, address) VALUES ('${username}', '${password}', '${firstName}', '${lastName}', '${phone}', '${address}')`;
-            connectionMySQL.query(query, (err, result) => {
-                if (err) throw err;
-                console.log(`Insert data ${username}, ${password} done`);
-                res.sendStatus(200);
-            });
-        }
+        console.log(`Insert data ${username}, ${password} done`);
+        res.sendStatus(200);
     });
 });
 
 app.post('/update/password', async (req, res) => {
     const { password, newPassword, userID } = req.body;
-    let query = `SELECT password FROM customer WHERE customer_id = ${userID}`;
-    
+    const query = `UPDATE customer SET password = ${newPassword} WHERE customer_id = ${userID} AND password='${password}'`;
+
     connectionMySQL.query(query, (err, result) => {
         if (err) throw err;
-        if(result[0].password == password) {
-            query = `UPDATE customer SET password = '${newPassword}' WHERE customer_id = ${userID} AND password='${password}'`;
-            connectionMySQL.query(query, (err, result) => {
-                if (err) throw err;
-                res.sendStatus(200);
-            });
-        } else {
-            res.status(400).send({ message: 'Đổi mật khẩu không thành công.' });
-        }
+        console.log(`Insert data ${username}, ${password} done`);
+        res.sendStatus(200);
     });
 });
 

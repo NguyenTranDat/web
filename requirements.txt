@@ -4,6 +4,7 @@ npm i antd
 npm i bootstrap
 npm i react-bootstrap
 npm i axios
+npm i validator
 #server
 npm init -y
 npm i
