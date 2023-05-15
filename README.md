@@ -85,3 +85,18 @@ node index.js
 ```
 ## GUI
 <img src="https://private-user-images.githubusercontent.com/100193117/238424239-481c3cd2-984a-4ea5-a1e9-fe73a6c6d612.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJrZXkxIiwiZXhwIjoxNjg0MTcyMDEyLCJuYmYiOjE2ODQxNzE3MTIsInBhdGgiOiIvMTAwMTkzMTE3LzIzODQyNDIzOS00ODFjM2NkMi05ODRhLTRlYTUtYTFlOS1mZTczYTZjNmQ2MTIucG5nP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQUlXTkpZQVg0Q1NWRUg1M0ElMkYyMDIzMDUxNSUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyMzA1MTVUMTcyODMyWiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9YTFlMWE2ZmM4OTU2NmRmMzQ4NDg1NjlkYTUzNjQ1NTIwM2E5NzQ3YzEwYjYxNDczMDMwOGE4OTdlODUzNDVhMSZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QifQ.01qDcXlmTbSUe4rlV6Ytyb5t9Fr258zcVKn2rTTmh3Q" width="250" alt="Home page" />
+
+## Mô tả về trang web
+1. Ở trang đăng ký, người dùng phải nhập đủ thông tin về email và password. Email phải nhập đúng định dạng(có @). password confirm phải nhập trùng với password.
+2. Sau khi đăng ký xong, người dùng có thể đăng nhập. Người dùng phải nhập đúng thông tin gồm email và password.
+3. Sau khi đăng nhập, trang web sẽ hiển thị từng sản phẩm (sử dụng lazy loading) giúp tăng tốc độ load và giảm tải hệ thống.
+4. Người dùng có thể tìm kiếm thông tin trên thanh tìm kiếm (có thể nhập đúng hoặc sai).
+5. Người dùng có thể ấn vào biểu tượng cuốn sách để xem những cuốn sách nào đang mượn.
+6. Trong trang sách đang mượn, người dùng có thể xem được sách hoặc trả lại nếu muốn.
+7. Người dùng có thể ấn vào biểu tượng user để xem thông tin người dùng, có thể đổi mật khẩu, có thể xem được lịch sử sách đã trả.
+8. Đối với user là quản trị viên (trường ad trong MySQL = 1) thì có thể thêm được sách và xem thống kê top10 cuốn sách được mượn nhiều nhất.
+
+## Các hệ quản trị cơ sở dữ liệu đã dùng
+1. MySQL lưu thông tin người dùng bao gồm: customer_id, email, password, first_name, last_name, phone, address, age, và ad. email và mật khẩu đều được mã hóa SHA2.
+2. MongoDB lưu thông tin sách bao gồm: _id, type, name, content.
+3. Cassandra lưu lịch sử mượn trả. Gồm 2 bảng muon(muon_id, customer_id, rental_date, book_id); tra(tra_id, customer_id, return_date, book_id).
