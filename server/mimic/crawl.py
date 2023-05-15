@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-resp = requests.get('https://cachep.vn/collections/tieu-su-hoi-ky')
+resp = requests.get('https://cachep.vn/collections/phat-trien-ky-nang-tri-tue-cho-tre?page=3')
 soup = BeautifulSoup(resp.content, "html.parser")
 
 def getTitle():

@@ -10,6 +10,18 @@ function Login() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        if(username == "" && password == "") {
+            setError("Vui lòng nhập email và mật khẩu.")
+            return;
+        }
+        if(username == "") {
+            setError("Vui lòng nhập email.")
+            return;
+        }
+        if(password == "") {
+            setError("Vui lòng nhập mật khẩu.")
+            return;
+        }
         try {
             const customerId = await login(username, password);
             if(customerId == false) {

@@ -9,16 +9,25 @@ function Content(props) {
   const [showProduct, setShowProduct] = useState(false);
   const [selectedBook, setSelectedBook] = useState({});
   const [books, setBooks] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const { searchTerm } = props;
 
   const fetchData = async () => {
-    const data = await getBooks(searchTerm);
-    setBooks(data);
+    setLoading(true);
+    const data = await getBooks(searchTerm, currentPage);
+    setBooks((prevBooks) => [...prevBooks, ...data]);
+    setLoading(false);
   };
 
   useEffect(() => {
+    setBooks([]);
     fetchData();
   }, [searchTerm]);
+
+  useEffect(() => {
+    fetchData();
+  }, [currentPage]);
 
   const handleShowProduct = (book) => {
     setSelectedBook(book);
@@ -27,6 +36,10 @@ function Content(props) {
 
   const handleCloseProductModal = () => {
     setShowProduct(false);
+  };
+
+  const handleLoadMore = () => {
+    setCurrentPage((prevPage) => prevPage + 1);
   };
 
   return (
@@ -41,6 +54,16 @@ function Content(props) {
             </React.Fragment>
           ))}
       </Row>
+
+      {loading && <p>Loading...</p>}
+
+      {!loading && books.length > 0 && (
+        <div className="load-more-container">
+          <button className="load-more-button" onClick={handleLoadMore}>
+            Load More
+          </button>
+        </div>
+      )}
 
       {showProduct && (
         <BookDetailsModal

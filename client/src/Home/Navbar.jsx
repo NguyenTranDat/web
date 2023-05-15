@@ -52,6 +52,13 @@ function Navbar({ setSearchTerm, isAdmin }) {
                 </Link>
               </li>
             )}
+            {isAdmin && (
+              <li className="nav-item">
+                <Link className="nav-link" to={`/stactic`}>
+                  Thống kê
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
       </nav>

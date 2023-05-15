@@ -79,6 +79,49 @@ app.post('/rental', async (req, res) => {
         });
 });
 
+app.post('/static', async (req, res) => {
+    const { limit } = req.body;
+    const m = new Map();
+    let query = `SELECT book_id FROM tra`;
+    try {
+        const result = await connectionCassandra.execute(query);
+        for(let i = 0; i<result.rows.length; ++i) {
+            const key = result.rows[i].book_id;
+            if (m.has(key)) {
+                m.set(key, { count: m.get(key).count + 1, uniqueCount: m.get(key).uniqueCount });
+            } else {
+                m.set(key, { count: 1, uniqueCount: 1 });
+            }
+        }
+
+        query = `SELECT book_id FROM muon`;
+        const result1 = await connectionCassandra.execute(query);
+        for(let i = 0; i<result1.rows.length; ++i) {
+            const key = result1.rows[i].book_id;
+            if (m.has(key)) {
+                m.set(key, { count: m.get(key).count + 1, uniqueCount: m.get(key).uniqueCount });
+            } else {
+                m.set(key, { count: 1, uniqueCount: 1 });
+            }
+        }
+
+        const sortedArray = [...m.entries()].sort((a, b) => b[1].count - a[1].count);
+        const top10 = sortedArray.slice(0, limit);
+        let books = [];
+        for (let i = 0; i < top10.length; ++i) {
+            const book = await Book.findById(new mongoose.Types.ObjectId(top10[i][0]));
+            if (book) {
+                books.push(book);
+            } else {
+                console.log("not found");
+            }
+        }
+        res.status(200).json({ books });
+    } catch(err) {
+        console.error('Failed to execute query', err);
+    }
+});
+
 app.post('/book/borrow', async (req, res) => {
     const { userID } = req.body;
     let books = [];
@@ -170,7 +213,7 @@ app.post('/book', async function (req, res) {
 
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
-    connectionMySQL.query('SELECT * FROM customer WHERE email = ?', [username], async (error, results) => {
+    connectionMySQL.query(`SELECT * FROM customer WHERE email = SHA2('${username}', 256) AND password = SHA2('${password}', 256)`, async (error, results) => {
         if (error) {
             res.status(500).json({ message: 'Lỗi khi truy vấn cơ sở dữ liệu' });
             return;
@@ -180,10 +223,6 @@ app.post('/api/login', async (req, res) => {
             return;
         }
         const user = results[0];
-        if (password != user.password) {
-            res.status(401).json({ message: user.password });
-            return;
-        }
 
         res.status(200).json({ customer_id: user.customer_id, ad: user.ad });
     });
@@ -191,13 +230,13 @@ app.post('/api/login', async (req, res) => {
 
 app.post('/api/register', async (req, res) => {
     const { username, password, firstName, lastName, address, phone } = req.body;
-    let query = `SELECT * FROM customer WHERE email = '${username}'`;
+    let query = `SELECT * FROM customer WHERE email = SHA2('${username}', 256)`;
     connectionMySQL.query(query, (err, result) => {
         if (err) throw err;
         if(result.length > 0) {
             res.status(400).send('Email đã tồn tại.');
         } else {
-            query = `INSERT INTO customer (email, password, first_name, last_name, phone, address) VALUES ('${username}', '${password}', '${firstName}', '${lastName}', '${phone}', '${address}')`;
+            query = `INSERT INTO customer (email, password, first_name, last_name, phone, address) VALUES (SHA2('${username}',256), SHA2('${password}', 256), '${firstName}', '${lastName}', '${phone}', '${address}')`;
             connectionMySQL.query(query, (err, result) => {
                 if (err) throw err;
                 console.log(`Insert data ${username}, ${password} done`);
@@ -214,7 +253,7 @@ app.post('/update/password', async (req, res) => {
     connectionMySQL.query(query, (err, result) => {
         if (err) throw err;
         if(result[0].password == password) {
-            query = `UPDATE customer SET password = '${newPassword}' WHERE customer_id = ${userID} AND password='${password}'`;
+            query = `UPDATE customer SET password = SHA2('${newPassword}', 256) WHERE customer_id = ${userID}`;
             connectionMySQL.query(query, (err, result) => {
                 if (err) throw err;
                 res.sendStatus(200);

@@ -7,6 +7,7 @@ import Register from './Login/Register';
 import UserInfo from './User';
 import Cart from './Cart';
 import Addproduct from './Home/AddProduct';
+import Static from './Statictics';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/add" element={<Addproduct />} />
           <Route path="/register" element={<Register />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/stactic" element={<Static />} />
           <Route path="*" element={<Navigate to="/" />} />
       </Routes>
   );
