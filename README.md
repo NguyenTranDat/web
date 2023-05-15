@@ -75,7 +75,7 @@ $npm i bycrypt
 
 ```
 npm start
-```![Screenshot from 2023-05-13 17-52-30](https://github.com/NguyenTranDat/web/assets/100193117/c549fbd1-34d0-4c80-a1be-954a631673ed)
+```
 
 
 7. In server, run:
