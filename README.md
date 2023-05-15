@@ -100,3 +100,14 @@ node index.js
 1. MySQL lưu thông tin người dùng bao gồm: customer_id, email, password, first_name, last_name, phone, address, age, và ad. email và mật khẩu đều được mã hóa SHA2.
 2. MongoDB lưu thông tin sách bao gồm: _id, type, name, content.
 3. Cassandra lưu lịch sử mượn trả. Gồm 2 bảng muon(muon_id, customer_id, rental_date, book_id); tra(tra_id, customer_id, return_date, book_id).
+
+## Ưu điểm của trang web
+1. Hiển thị sách khá nhanh.
+2. Sử dụng nhiều hệ quản trị nên có thể sử dụng được ưu điểm của các hệ quản trị đó. 
+3. Dữ liệu phân tán giúp tránh bị đánh cắp dữ liêu.
+4. Mô hình MICROSEVICE giúp dễ dàng nâng cấp, bảo trì.
+
+## Nhược điểm của trang web
+1. Dữ liệu phân tán nên gặp vấn đề đồng bộ hóa dữ liệu.
+2. Người dùng có thể mượn 2 cuốn sách giống nhau.
+3. Người dùng có phải trả hết tất cả những cuốn sách giống nhau.
